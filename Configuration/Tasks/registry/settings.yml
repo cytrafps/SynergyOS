@@ -106,13 +106,15 @@ actions:
  - !registryValue: {path: 'HKCR\ms-gamebar\shell\open\command', value: '', type: REG_EXPAND_SZ, data: '%WINDIR%\System32\systray.exe'}
 
  # disable widgets
- - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarDa', type: REG_DWORD, data: '0'}
+ # TaskbarDa is protected by UCPD on 24H2+ (Access denied), use the policy instead
+ - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Dsh', value: 'AllowNewsAndInterests', type: REG_DWORD, data: '0', iso: true}
 
 
  # remove gallery in file explorer
  - !registryKey: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace_41040327\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}', operation: delete, iso: true}
  # Disable Memory Compression
- - !powerShell: {command: 'Disable-MMAgent -MemoryCompression', wait: true}
+ # Disable-MMAgent requires SysMain running (error 1058 otherwise); services.yml disables SysMain afterwards
+ - !powerShell: {command: 'Set-Service SysMain -StartupType Manual; Start-Service SysMain -EA 0; Disable-MMAgent -MemoryCompression', wait: true}
 
  # disable windows defender
  - !writeStatus {status: "Disabling Windows Defender"}
